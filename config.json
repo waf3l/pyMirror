@@ -7,7 +7,7 @@
 		"logging_level" : "DEBUG",
 		"logging_directory" : ".mirror",
 		"logging_stdout" : true,
-		"logging_debug_to_file" : false
+		"logging_debug_to_file" : true
 	},
 
 	"watch_dir" : {"path":"/home/waf3l/watch_dir"},		
