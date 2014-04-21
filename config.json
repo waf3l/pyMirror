@@ -1,0 +1,16 @@
+{
+	"system" : {
+		"status" : "dev"
+	},
+
+	"logging" : {
+		"logging_level" : "DEBUG",
+		"logging_directory" : ".mirror",
+		"logging_stdout" : true,
+		"logging_debug_to_file" : false
+	},
+
+	"watch_dir" : {"path":"/home/waf3l/watch_dir"},		
+
+	"mirror_dir" : {"path":"/home/waf3l/mirror"}
+}
