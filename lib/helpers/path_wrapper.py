@@ -127,17 +127,39 @@ class PathWrapper(object):
 		"""
 		try:
 			self.logger.debug('Try to copy file from : %s to: %s'%(src_path,dst_path))
-			if os.path.exists(os.path.split(dst_path)[0]):
-				copy2(src_path,dst_path)
-				self.logger.debug('File successfull copied from %s to %s'%(src_path,dst_path))
-			else:
-				if self.make_dir(os.path.split(dst_path)[0]):
+			if self.check_exist(src_path):
+				if self.check_exist(os.path.split(dst_path)[0]):
 					copy2(src_path,dst_path)
 					self.logger.debug('File successfull copied from %s to %s'%(src_path,dst_path))
 				else:
-					#can not create directory tree for file to copy
-					return False
-			return True
+					if self.make_dir(os.path.split(dst_path)[0]):
+						copy2(src_path,dst_path)
+						self.logger.debug('File successfull copied from %s to %s'%(src_path,dst_path))
+					else:
+						#can not create directory tree for file to copy
+						return False
+				return True
+			else:
+				self.logger.error('Source path not exists, path: %s'%(src_path))
+				return False
 		except Exception, e:
 			self.logger.error('PathWrapper.copy_path: %s'%(str(e)),exc_info=True)
+			return False
+
+	def move_path(self,src_path,dst_path):
+		"""
+		Recursively move a file or directory to another location
+
+		src_path: source path
+		dst_path: destination path
+		"""
+		try:
+			self.logger.debug('Try to move file or directory from: %s to: %s'%(src_path,dst_path))
+			if self.check_exist(src_path):
+				move(src_path,dst_path)
+				return True
+			else:
+				return False
+		except Exception, e:
+			self.logger.error('PathWrapper.move_path: %s'%(str(e)),exc_info=True)
 			return False
