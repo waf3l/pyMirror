@@ -25,7 +25,7 @@ class SyncHandler(object):
 		self.config = config
 
 		#path manipulation
-		self.path = PathWrapper()
+		self.path = PathWrapper(self.config.watch_dir)
 
 	def process_item(self,item):
 		"""

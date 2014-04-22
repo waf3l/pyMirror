@@ -11,11 +11,29 @@ from filecmp import cmp
 
 class PathWrapper(object):
 	"""Class for path manipulation purpose"""
-	def __init__(self):
+	def __init__(self,protect_path=None):
 		"""Class initialization setup"""
 
 		#logger object
 		self.logger = logging.getLogger('app.wrapper.path')
+
+		#protected path
+		self.protect_path = protect_path
+
+	def check_path_protect(self,path):
+		"""
+		Verify if protected_path is in path. If is return True else return False
+
+		path: path to verify with protected path
+		"""
+		if self.protect_path is not None:
+			if self.protect_path in path:
+				self.logger.warning('Protected path in check path, check path: %s, protected path: %s'%(path,self.protect_path))
+				return True
+			else:
+				return False
+		else:
+			return False
 
 	def check_exist(self,path):
 		"""
@@ -94,18 +112,21 @@ class PathWrapper(object):
 		path: the path that will be deleted
 		"""
 		try:
-			self.logger.debug('Try to delete directory or file, path: %s'%(path))
-			if os.path.isdir(path):
-				self.logger.debug('Path is directory, path: %s'%(path))
-				rmtree(path)
-				return True
-			elif os.path.isfile(path):
-				self.logger.debug('Path is file, path: %s'%(path))
-				os.remove(path)
-				return True
+			if not self.check_path_protect(path):
+				self.logger.debug('Try to delete directory or file, path: %s'%(path))
+				if os.path.isdir(path):
+					self.logger.debug('Path is directory, path: %s'%(path))
+					rmtree(path)
+					return True
+				elif os.path.isfile(path):
+					self.logger.debug('Path is file, path: %s'%(path))
+					os.remove(path)
+					return True
+				else:
+					#path not recognize 
+					self.logger.warning('Path is not recognize, path: %s'%(path))
+					return False
 			else:
-				#path not recognize 
-				self.logger.warning('Path is not recognize, path: %s'%(path))
 				return False
 		except Exception, e:
 			self.logger.error('PathWrapper.del_path: %s'%(str(e)),exc_info=True)
