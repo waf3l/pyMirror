@@ -71,5 +71,5 @@ class Logger():
 
 			return True
 		except Exception, e:
-			print "Error creating logger: %s"%(e)
+			raise e
 			return False

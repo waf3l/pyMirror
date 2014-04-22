@@ -40,7 +40,7 @@ class Main(object):
 			self.log.info('Init main logger')
 			return True
 		else:
-			main.log.error('Error main setup')
+			print 'Error main setup'
 			return False
 
 	def startWatcher(self):
