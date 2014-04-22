@@ -91,6 +91,7 @@ class Main(object):
 			while True:
 				time.sleep(1)
 				if not self.do_check_engine():
+					self.log.error('Check engine return error, shutdown the app')
 					raise KeyboardInterrupt
 		except KeyboardInterrupt, e:
 			self.log.warning('KeyboardInterrupt')
@@ -99,8 +100,10 @@ class Main(object):
 	def do_check_engine(self):
 		"""Check if all threads all working"""
 		if not self.watcher.do_work.is_set():
+			self.log.error('Watcher thread suddenly ends his work')
 			return False
 		if not self.sync.do_work.is_set():
+			self.log.error('Sync thread suddenly ends his work')
 			return False
 
 		return True
@@ -111,16 +114,16 @@ class Main(object):
 		
 		exit_code: exit status
 		"""
-		#send end work to watcher thread
+		self.log.info('Send end work signal to watcher thread')
 		self.watcher.end_work.set()
 		
-		#wait for watcher thread to ends his work
+		self.log.info('Waiting for watcher thread ends his work')
 		self.watcher.join()
 
-		#send end work signal to sync thread
+		self.log.info('Send end work signal to sync thread')
 		self.sync.end_work.set()
 
-		#wait for sync thread to ends his work
+		self.log.info('Waiting for sync thread ends his work')
 		self.sync.join
 
 		#exit with status code

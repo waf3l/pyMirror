@@ -98,7 +98,7 @@ class Watcher(Thread):
 			#wait for end work of watchdog
 			self.logger.info('Waiting to finish watching the directory')
 			self.observer.join()
-			self.logger.info('Watcher ends his work')
+			self.logger.info('Watchdog ends his work')
 		except Exception, e:
 			self.do_work.clear()
 			self.logger.error('Watcher.run error: %s'%(str(e)),exc_info=True)
