@@ -88,20 +88,29 @@ class Index(Thread):
 		"""Compare mirror path list with original direcotry"""
 		try:
 			self.logger.info('Indexing mirror directory')
+			self.mirror_validation_paths.append(self.config.mirror_dir)
 			for path in self.path.iterate_path(self.config.mirror_dir):				
 				self.logger.debug('Index path: %s'%(path))
 				#check if path is file
 				if os.path.isfile(path):
 					self.logger.debug('Path is FILE, path: %s'%(path))
-					if not self.path.cmp_paths(path,path.replace(self.config.mirror_dir,self.config.watch_dir)):
-						#are diffrent
+					#check if file exist in watched directory
+					if self.path.check_exist(path.replace(self.config.mirror_dir,self.config.watch_dir)):					
+						if not self.path.cmp_paths(path,path.replace(self.config.mirror_dir,self.config.watch_dir)):
+							#are diffrent
+							if not self.path.del_path(path):
+								self.logger.error('Index mirror directory error')
+								return False
+						else:
+							#files are the same skip to next path
+							self.logger.debug('Mirror path: %s are equel with original path: %s, add mirror path to list validation'%(path,path.replace(self.config.mirror_dir,self.config.watch_dir)))
+							self.mirror_validation_paths.append(path)
+					else:
+						#file not exist in watched directory
+						#delete the file
 						if not self.path.del_path(path):
 							self.logger.error('Index mirror directory error')
 							return False
-					else:
-						#files are the same skip to next path
-						self.logger.debug('Mirror path: %s are equel with original path: %s, add mirror path to list validation'%(path,path.replace(self.config.mirror_dir,self.config.watch_dir)))
-						self.mirror_validation_paths.append(path)
 				#check if path is dir
 				elif os.path.isdir(path):
 					self.logger.debug('Path is DIRECTORY, path: %s'%(path))
@@ -134,24 +143,16 @@ class Index(Thread):
 					self.logger.debug('Path not exist in mirror list validation, path: %s'%(path))
 					if os.path.isfile(path):
 						self.logger.debug('Path is FILE, path: %s'%(path))
-						if not self.path.cmp_paths(path,path.replace(self.config.watch_dir,self.config.mirror_dir)):
-							#path are diffrent
-							#delete mirror path and copy new path
-							if self.path.del_path(path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								#mirror path deleted
-								if not self.path.copy_path(path,path.replace(self.config.watch_dir,self.config.mirror_dir)):
-									#failed copy file
-									self.logger.error('Index watched directory error')
-									return False
-							else:
-								self.logger.error('Index watched directory error')
-								return False
+						if not self.path.copy_path(path,path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							#failed copy file
+							self.logger.error('Index watched directory error')
+							return False						
 					elif os.path.isdir(path):
 						self.logger.debug('Path is DIRECTORY, path: %s'%(path))
-						if not self.path.check_exist(path.replace(self.config.watch_dir,self.config.mirror_dir)):
-							if not self.path.make_dir(path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								self.logger.error('Index watched directory error')
-								return False
+
+						if not self.path.make_dir(path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							self.logger.error('Index watched directory error')
+							return False
 					else:
 						#not recognize path
 						self.logger.warning('Not recognize path: %s'%(path))
@@ -166,4 +167,3 @@ class Index(Thread):
 		except Exception, e:
 			self.logger.error('Index.check_original, error: %s'%(str(e)),exc_info=True)
 			return False
-

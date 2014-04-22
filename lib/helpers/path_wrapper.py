@@ -75,16 +75,13 @@ class PathWrapper(object):
 		pathB: path of file B
 		"""
 		try:
-			if (self.check_exist(pathB)) and (self.check_exist(pathA)):
-				self.logger.debug('Try to compare files, file A: %s, file B: %s'%(pathA,pathB))
-				value = cmp(pathA,pathB)
-				if value:
-					self.logger.debug('Files are equel, file A: %s, file B: %s'%(pathA,pathB))
-					return True
-				else:
-					self.logger.debug('Files are diffrent, file A: %s, file B: %s'%(pathA,pathB))
-					return False
+			self.logger.debug('Try to compare files, file A: %s, file B: %s'%(pathA,pathB))
+			value = cmp(pathA,pathB)
+			if value:
+				self.logger.debug('Files are equel, file A: %s, file B: %s'%(pathA,pathB))
+				return True
 			else:
+				self.logger.debug('Files are diffrent, file A: %s, file B: %s'%(pathA,pathB))
 				return False
 		except Exception, e:		
 			self.logger.error('PathWrapper.cmp_paths: %s'%(str(e)),exc_info=True)
@@ -98,22 +95,18 @@ class PathWrapper(object):
 		"""
 		try:
 			self.logger.debug('Try to delete directory or file, path: %s'%(path))
-			if self.check_exist(path):
-				if os.path.isdir(path):
-					self.logger.debug('Path is directory, path: %s'%(path))
-					rmtree(path)
-					return True
-				elif os.path.isfile(path):
-					self.logger.debug('Path is file, path: %s'%(path))
-					os.remove(path)
-					return True
-				else:
-					#path not recognize 
-					self.logger.warning('Path is not recognize, path: %s'%(path))
-					return False
-			else:
-				#path not exist
+			if os.path.isdir(path):
+				self.logger.debug('Path is directory, path: %s'%(path))
+				rmtree(path)
 				return True
+			elif os.path.isfile(path):
+				self.logger.debug('Path is file, path: %s'%(path))
+				os.remove(path)
+				return True
+			else:
+				#path not recognize 
+				self.logger.warning('Path is not recognize, path: %s'%(path))
+				return False
 		except Exception, e:
 			self.logger.error('PathWrapper.del_path: %s'%(str(e)),exc_info=True)
 			return False
@@ -127,21 +120,17 @@ class PathWrapper(object):
 		"""
 		try:
 			self.logger.debug('Try to copy file from : %s to: %s'%(src_path,dst_path))
-			if self.check_exist(src_path):
-				if self.check_exist(os.path.split(dst_path)[0]):
+			if self.check_exist(os.path.split(dst_path)[0]):
+				copy2(src_path,dst_path)
+				self.logger.debug('File successfull copied from %s to %s'%(src_path,dst_path))
+			else:
+				if self.make_dir(os.path.split(dst_path)[0]):
 					copy2(src_path,dst_path)
 					self.logger.debug('File successfull copied from %s to %s'%(src_path,dst_path))
 				else:
-					if self.make_dir(os.path.split(dst_path)[0]):
-						copy2(src_path,dst_path)
-						self.logger.debug('File successfull copied from %s to %s'%(src_path,dst_path))
-					else:
-						#can not create directory tree for file to copy
-						return False
-				return True
-			else:
-				self.logger.error('Source path not exists, path: %s'%(src_path))
-				return False
+					#can not create directory tree for file to copy
+					return False
+			return True
 		except Exception, e:
 			self.logger.error('PathWrapper.copy_path: %s'%(str(e)),exc_info=True)
 			return False
@@ -155,11 +144,8 @@ class PathWrapper(object):
 		"""
 		try:
 			self.logger.debug('Try to move file or directory from: %s to: %s'%(src_path,dst_path))
-			if self.check_exist(src_path):
-				move(src_path,dst_path)
-				return True
-			else:
-				return False
+			move(src_path,dst_path)
+			return True
 		except Exception, e:
 			self.logger.error('PathWrapper.move_path: %s'%(str(e)),exc_info=True)
 			return False

@@ -63,11 +63,19 @@ class JobQueue():
 			self.logger.debug('Im trying mark queue job item as done')
 			self.queue.task_done()
 			self.logger.debug('Queue job item mark as done')
-			self.logger.debug('Queue job count: \033[1;31m%s\033[1;m'%(self.queue.qsize()))
 			return True
 		except ValueError, e:
 			self.logger.error('Error method task_done, error: %s'%(e),exc_info=True)
 			return  False
-		
+	
+	def count(self):
+		"""
+		Return number of items in queue
+		"""	
+		try:
+			return True, self.queue.qsize()
+		except Exception, e:
+			self.logger.error('Error method task_done, error: %s'%(e),exc_info=True)
+			return  False, None
 
 jobQueue = JobQueue()

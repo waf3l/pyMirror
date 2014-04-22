@@ -34,25 +34,42 @@ class SyncHandler(object):
 		item: item from job queue
 		"""
 		if item.event_type == 'deleted':
-			self.on_delete(item)
+			if self.on_delete(item):
+				return True
+			else:
+				#error
+				return False
 		elif item.event_type == 'created':
-			self.on_create(item)
+			if self.on_create(item):
+				return True
+			else:
+				#error
+				return False
 		elif item.event_type == 'modified':
-			self.on_modify(item)
+			if self.on_modify(item):
+				return True
+			else:
+				#error
+				return False
 		elif item.event_type == 'moved':
-			self.on_move(item)
+			if self.on_move(item):
+				return True
+			else:
+				#error
+				return False
 		else:
-			#not recognize event fuck this, mark as done
-			pass
-		#mark item as done
-		jobQueue.task_done()
+			#not recognize event fuck this 
+			return True
 
 	def on_delete(self,item):
 		"""Item event on delete"""
 		try:
 			self.logger.debug('on_delete, item: %s'%(item))
-			if self.path.del_path(item.src_path.replace(self.config.watch_dir, self.config.mirror_dir)):
-				return True
+			if self.path.check_exist(item.src_path.replace(self.config.watch_dir, self.config.mirror_dir)):
+				if self.path.del_path(item.src_path.replace(self.config.watch_dir, self.config.mirror_dir)):
+					return True
+				else:
+					return False
 			else:
 				return False
 		except Exception, e:
@@ -63,12 +80,31 @@ class SyncHandler(object):
 		"""New item event on create"""
 		try:
 			self.logger.debug('on_create, item: %s'%(item))
-			if item.is_directory:
-				self.logger.debug('on_create path is directory, path: %s'%(item.src_path))
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-					#directory exist skiping
+			if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+				if item.is_directory:
 					return True
 				else:
+					if self.path.check_exist(item.src_path):
+						#file exist compare the two files
+						if self.path.cmp_paths(item.src_path,item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							#files are equel skiping
+							return True
+						else:
+							#file are diffrent delete old and copy new one
+							if self.path.del_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+								if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+									#success
+									return True
+								else:
+									#error
+									return False
+							else:
+								#error
+								return False
+					else:
+						return False	
+			else:
+				if item.is_directory:
 					#directory not exist create it
 					if self.path.make_dir(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
 						#success
@@ -76,33 +112,17 @@ class SyncHandler(object):
 					else:
 						#error
 						return False
-			else:
-				self.logger.debug('on_create path is file, path: %s'%(item.src_path))
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-					#file exist compare the two files
-					if self.path.cmp_paths(item.src_path,item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-						#files are equel skiping
-						return True
-					else:
-						#file are diffrent delete old and copy new one
-						if self.path.del_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-							if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								#success
-								return True
-							else:
-								#error
-								return False
+				else:
+					if self.path.check_exist(item.src_path):
+						#file not exist copy it
+						if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							#success
+							return True
 						else:
 							#error
 							return False
-				else:
-					#file not exist copy it
-					if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-						#success
-						return True
 					else:
-						#error
-						return False					
+						return False
 		except Exception, e:
 			self.logger.error('SyncHandler.on_create, error: %s'%(str(e)),exc_info=True)
 			return False
@@ -111,41 +131,45 @@ class SyncHandler(object):
 		"""Item event on modify"""
 		try:
 			self.logger.debug('on_modify, item: %s'%(item))
-			if item.is_directory:
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+			if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):				
+				if item.is_directory:
 					return True
 				else:
+					if self.path.check_exist(item.src_path):
+						if self.path.cmp_paths(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							#are equel skiping
+							return True
+						else:
+							#are diffrent
+							#delete the old one
+							if self.path.del_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+								#create the new one
+								if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+									return True
+								else:
+									#error
+									return False
+							else:
+								#error
+								return False
+					else:
+						return False
+			else:
+				if item.is_directory:
 					if self.path.make_dir(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
 						return True
 					else:
 						#error
 						return False
-			else:
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-					#item exist on dst
-					if self.path.cmp_paths(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-						#are equel skiping
-						return True
-					else:
-						#are diffrent
-						#delete the old one
-						if self.path.del_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-							#create the new one
-							if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								return True
-							else:
-								#error
-								return False
+				else:
+					#create the item on dst
+					if self.path.check_exist(item.src_path):
+						if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							return True
 						else:
 							#error
 							return False
-				else:
-					#item not exist in dst
-					#create the item on dst
-					if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-						return True
 					else:
-						#error
 						return False
 		except Exception, e:
 			self.logger.error('SyncHandler.on_modify, error: %s'%(str(e)),exc_info=True)
@@ -165,22 +189,26 @@ class SyncHandler(object):
 		    If the destination already exists but is not a directory, it may be
 		    overwritten depending on os.rename() semantics.
 			"""
-			if item.is_directory:
-				#is dir
-				if self.path.check_exist(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-					#path already exist skiping
-					return True
+			if self.path.check_exist(item.dest_path):
+				if item.is_directory:
+					#is dir
+					if self.path.check_exist(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						#path already exist skiping
+						return True
+					else:
+						if self.path.move_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir),item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							return True
+						else:
+							return False					
 				else:
+					#is file
 					if self.path.move_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir),item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
 						return True
 					else:
-						return False					
+						return False
 			else:
-				#is file
-				if self.path.move_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir),item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-					return True
-				else:
-					return False
+				#path not exist 
+				return False
 		except Exception, e:
 			self.logger.error('SyncHandler.on_move, error: %s'%(str(e)),exc_info=True)
 			return False
@@ -227,7 +255,12 @@ class Sync(Thread):
 				while not jobQueue.isEmpty():
 					status, item = jobQueue.get()
 					if status:
-						self.sync_handler.process_item(item)
+						if self.sync_handler.process_item(item):
+							#mark item as done
+							jobQueue.task_done()
+						else:
+							#handle error, but for the time being now mark as done
+							jobQueue.task_done()
 					else:
 						raise Exception('Can not get item from job queue')
 			
