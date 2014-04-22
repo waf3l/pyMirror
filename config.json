@@ -4,6 +4,7 @@
 	},
 
 	"logging" : {
+		"log_path" : "/home/waf3l",
 		"logging_level" : "DEBUG",
 		"logging_directory" : ".mirror",
 		"logging_stdout" : true,

@@ -39,7 +39,7 @@ class Config():
 		self.mirror_dir = self.read('mirror_dir','path')
 
 		#Home directory
-		self.home_dir = os.path.expanduser("~")
+		self.log_path = self.read('logging','log_path')
 
 		#Path to the logging files
 		self.logging_directory = self.read('logging','logging_directory')

@@ -20,8 +20,8 @@ class Logger():
 		"""
 		try:
 			"""Check if logging directory exist if not directory will be created"""
-			if not os.path.isdir(os.path.join(self.config.home_dir,self.config.logging_directory)):
-				os.makedirs(os.path.join(self.config.home_dir,self.config.logging_directory),mode=0770)
+			if not os.path.isdir(os.path.join(self.config.log_path,self.config.logging_directory)):
+				os.makedirs(os.path.join(self.config.log_path,self.config.logging_directory),mode=0770)
 
 			"""Create main logger instance"""
 			logger = logging.getLogger('app')
@@ -49,21 +49,21 @@ class Logger():
 			""""check if logging DEBUG to file is true"""
 			if self.config.logging_debug_to_file:
 				"""file handler for debug"""
-				path_file_handler_debug = os.path.join(self.config.home_dir,self.config.logging_directory,self.config.file_debug_logging_name)
+				path_file_handler_debug = os.path.join(self.config.log_path,self.config.logging_directory,self.config.file_debug_logging_name)
 				handler_debug = RotatingFileHandler(path_file_handler_debug, maxBytes=8192000,backupCount=100)
 				handler_debug.setLevel(logging.DEBUG)
 				handler_debug.setFormatter(formatter)
 				logger.addHandler(handler_debug)
 
 			"""file handler for info"""
-			path_file_handler_info = os.path.join(self.config.home_dir,self.config.logging_directory,self.config.file_info_logging_name)
+			path_file_handler_info = os.path.join(self.config.log_path,self.config.logging_directory,self.config.file_info_logging_name)
 			handler_info = RotatingFileHandler(path_file_handler_info, maxBytes=2048000,backupCount=100)
 			handler_info.setLevel(logging.INFO)
 			handler_info.setFormatter(formatter)
 			logger.addHandler(handler_info)
 
 			"""file handler for warning"""
-			path_file_handler_warning = os.path.join(self.config.home_dir,self.config.logging_directory,self.config.file_warning_logging_name)
+			path_file_handler_warning = os.path.join(self.config.log_path,self.config.logging_directory,self.config.file_warning_logging_name)
 			handler_warning = RotatingFileHandler(path_file_handler_warning, maxBytes=512000,backupCount=100)
 			handler_warning.setLevel(logging.WARNING)
 			handler_warning.setFormatter(formatter)
@@ -71,5 +71,5 @@ class Logger():
 
 			return True
 		except Exception, e:
-			raise e
+			print e
 			return False
