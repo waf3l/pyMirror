@@ -13,6 +13,7 @@ from lib.helpers.job_queue import jobQueue
 
 import time
 import logging
+import sys
 
 class WatcherHandler(FileSystemEventHandler):
 	"""File system event handler for watcher thread"""
@@ -27,7 +28,10 @@ class WatcherHandler(FileSystemEventHandler):
 
 		event: Catched event
 		"""
-		self.logger.debug(str(event))
+		if sys.platform == "win32":
+			pass
+		else:
+			self.logger.debug(str(event))
 		jobQueue.put(event)
 
 class Watcher(Thread):
