@@ -1,3 +1,9 @@
 pyMirror
 --------
 Python app for watch changes on directory and take proper actions to mirror directory 
+
+RUN
+---
+The config.json is the main configuration file, we must setup the watch_dir path and mirror_dir path, also we must enter the log path, were the log files will be stored.
+
+When we configured the config.json now we only must run the mirror.py file. 
