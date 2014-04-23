@@ -46,4 +46,8 @@ class TestPathWrapper(TestPathWrapperSetup):
     def test_make_dir(self):
         """Check if create directories"""
         self.assertTrue(self.path.make_dir(os.path.join(mirror_dir,'test')))
-        self.assertFalse(self.path.make_dir('/sdsd/sdfsdfsf'))
+        self.assertFalse(self.path.make_dir(os.path.join(mirror_dir,'test')))
+
+    def test_iterate_path(self):
+        pass
+    
