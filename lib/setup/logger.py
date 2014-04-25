@@ -71,5 +71,4 @@ class Logger():
 
 			return True
 		except Exception, e:
-			print e
-			return False
+			raise e
