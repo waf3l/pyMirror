@@ -29,10 +29,9 @@ class TestConfig(TestConfigSetup):
 		path, config_data = self.config.get_config(os.getcwd())
 		self.assertIsNotNone(path)
 		self.assertIsNotNone(config_data)
-
-		path, config_data = self.config.get_config('/test_path')
-		self.assertIsNone(path)
-		self.assertIsNone(config_data)
+ 
+		with self.assertRaises(OSError):
+			self.config.get_config('/test_path')
 
 	def test_read(self):
 		"""Test read key value from config file"""

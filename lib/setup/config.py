@@ -54,7 +54,7 @@ class Config():
 		#Path to the logging files
 		self.logging_directory = self.config_data['logging']['logging_directory']
 
-	def get_config(self,path):
+	def get_config_old(self,path):
 		"""
 		Get the path of config file and loads the config file
 		
@@ -72,7 +72,26 @@ class Config():
 						return os.path.join(prefix,directory,'config.json'),json.loads(open(os.path.join(prefix,directory,'config.json')).read())
 				else:
 					return None, None
-			
+
+	def get_config(self,path):
+		"""
+		Get the path of config file and loads the config file
+		
+		path: the path for search config file
+		"""
+		prefix, directory = os.path.split(path)
+
+		if directory == 'tests':
+			if os.path.exists(os.path.join(prefix,'config.json')): 
+				return os.path.join(prefix,'config.json'),json.loads(open(os.path.join(prefix,'config.json')).read())
+			else:
+				raise OSError('Can not find config.json file')
+		else:
+			if os.path.exists(os.path.join(prefix,directory,'config.json')):
+				return os.path.join(prefix,directory,'config.json'),json.loads(open(os.path.join(prefix,directory,'config.json')).read())
+			else:
+				raise OSError('Can not find config.json file')
+		
 
 	def read(self,group,key):
 		"""
