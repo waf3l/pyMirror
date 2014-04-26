@@ -19,7 +19,11 @@ class Main(object):
 	def __init__(self):
 		"""Initialize main app class"""
 		#get config 
-		self.config = Config()
+		try:
+			self.config = Config()
+		except Exception, e:
+			raise e
+			sys.exit(1)
 		
 		#set logger for main class
 		self.logger = Logger(self.config)	

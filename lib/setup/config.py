@@ -11,6 +11,10 @@ class Config():
 
 	def __init__(self):
 		"""Init config"""
+
+		#date create config
+		self.date_log = datetime.now().strftime('%Y%m%d')
+		
 		self.config_path, self.config_data = self.get_config(os.getcwd())
 		if self.config_path is None:
 			raise OSError('Can not find config file')
@@ -34,13 +38,13 @@ class Config():
 		self.logging_debug_to_file = self.config_data['logging']['logging_debug_to_file']
 
 		#Log file name for debug logging level
-		self.file_debug_logging_name = 'mirror_debug_'+datetime.now().strftime('%Y%m%d')+'.log'
+		self.file_debug_logging_name = 'mirror_debug_%s.log'%(self.date_log)
 
 		#Log file name for info logging level
-		self.file_info_logging_name = 'mirror_info_'+datetime.now().strftime('%Y%m%d')+'.log'
+		self.file_info_logging_name = 'mirror_info_%s.log'%(self.date_log)
 
 		#Log file name for warning logging level
-		self.file_warning_logging_name = 'mirror_warning_'+datetime.now().strftime('%Y%m%d')+'.log'
+		self.file_warning_logging_name = 'mirror_warning_%s.log'%(self.date_log)
 
 		#Path to the watching directory
 		self.watch_dir = self.config_data['watch_dir']['path']
@@ -53,25 +57,6 @@ class Config():
 
 		#Path to the logging files
 		self.logging_directory = self.config_data['logging']['logging_directory']
-
-	def get_config_old(self,path):
-		"""
-		Get the path of config file and loads the config file
-		
-		path: the path for search config file
-		"""
-		prefix, directory = os.path.split(path)
-
-		if directory == 'mirror_app': 
-			return os.path.join(prefix,directory,'config.json'),json.loads(open(os.path.join(prefix,directory,'config.json')).read())
-		else:
-			while True:
-				if (os.path.exists(prefix)) and (prefix is not '/'):
-					prefix, directory = os.path.split(prefix)
-					if directory == 'mirror_app':
-						return os.path.join(prefix,directory,'config.json'),json.loads(open(os.path.join(prefix,directory,'config.json')).read())
-				else:
-					return None, None
 
 	def get_config(self,path):
 		"""
