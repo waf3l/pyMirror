@@ -5,6 +5,7 @@ Tests for sync module
 import os
 import unittest
 import sys
+import time
 from shutil import rmtree, copy2
 
 app_dir = os.path.dirname(os.getcwd())
@@ -17,6 +18,7 @@ from lib.setup.config import Config
 from lib.helpers.hs_generator import get_random_string
 from lib.engine.watcher import Watcher
 from lib.engine.sync import Sync
+from lib.helpers.job_queue import jobQueue
 
 class TestSyncSetup(unittest.TestCase):
     """
@@ -51,13 +53,6 @@ class TestSyncSetup(unittest.TestCase):
 class TestSync(TestSyncSetup):
 	"""Test for Sync class"""
 
-	def create_random_file(self,path):
-		"""Creaate random file"""
-		file_name = os.path.join(path,get_random_string())
-		with open(file_name,'wb') as myFile:
-			myFile.write(os.urandom(1024))
-		return file_name
-	
 	def test_sync_run(self):
 		"""Test if sync thread is alive"""
 		self.assertTrue(self.sync.isAlive())

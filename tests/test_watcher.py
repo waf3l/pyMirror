@@ -26,7 +26,7 @@ class TestWatcherSetup(unittest.TestCase):
         time.sleep(2)
         self.watcher.end_work.set()
         if self.watcher.isAlive():
-        	self.watcher.join()
+        	self.watcher.join(timeout=5)
 
 class TestWatcher(TestWatcherSetup):
 	"""Test the watcher class"""

@@ -67,6 +67,21 @@ class JobQueue():
 		except ValueError, e:
 			self.logger.error('Error method task_done, error: %s'%(e),exc_info=True)
 			return  False
+
+	def task_all_done(self):
+		"""
+		Mark all queue items as done
+		"""
+		try:
+			self.logger.debug('Im trying mark queue job item as done')
+			while not self.isEmpty():
+				self.get()
+				self.queue.task_done()
+			self.logger.debug('All queue job items mark as done')
+			return True
+		except Exception, e:
+			self.logger.error('Error method task_all_done, error: %s'%(e),exc_info=True)
+			return  False
 	
 	def count(self):
 		"""

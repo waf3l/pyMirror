@@ -82,6 +82,17 @@ class TestJobQueue(TestJobQueueSetup):
 		#test raise ValueError and return False	
 		self.assertFalse(self.job.task_done())
 
+	def test_task_all_done(self):
+		"""Test mark all items as done"""
+		#create items
+		for i in range(0,9):
+			item = self.create_item_event_create()
+			#put item
+			self.job.put(item)
+		
+		#test task done
+		self.assertTrue(self.job.task_all_done())
+
 	def test_count(self):
 		"""Test count item in queue"""
 		#count empty job
