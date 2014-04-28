@@ -36,7 +36,7 @@ class Logger():
 			logger.setLevel(self.config.logging_level)
 
 			"""formatter for log""" 
-			formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')	
+			formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)d - %(message)s')	
 			
 			"""check is logging_stdout is True then log to console"""
 			if self.config.logging_stdout:

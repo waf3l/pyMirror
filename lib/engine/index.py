@@ -72,6 +72,7 @@ class Index(Thread):
 		else:
 			if self.path.make_dir(self.config.mirror_dir):
 				#mirror path created 
+				self.mirror_validation_paths.append(self.config.mirror_dir)
 				if self.check_original():
 					#TODO: check if mirror_validation_paths is empty
 					self.logger.info('Index finish work with status: success')

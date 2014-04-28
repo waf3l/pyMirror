@@ -122,13 +122,15 @@ class Main(object):
 		self.watcher.end_work.set()
 		
 		self.log.info('Waiting for watcher thread ends his work')
-		self.watcher.join()
+		if self.watcher.isAlive():
+			self.watcher.join()
 
 		self.log.info('Send end work signal to sync thread')
 		self.sync.end_work.set()
 
 		self.log.info('Waiting for sync thread ends his work')
-		self.sync.join
+		if self.sync.isAlive():
+			self.sync.join
 
 		#exit with status code
 		sys.exit(exit_code)
@@ -141,11 +143,11 @@ if __name__ == "__main__":
 				if main.startSync():	
 					main.mainLoop()
 				else:
-					sys.exit(1)
+					main.do_exit(1)
 			else:
-				sys.exit(1)
+				main.do_exit(1)
 		else:
-			sys.exit(1)
+			main.do_exit(1)
 
 	else:
 		sys.exit(1)
