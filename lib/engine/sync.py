@@ -258,7 +258,15 @@ class SyncHandler(object):
 							#path not exist
 							#moving to the new location
 							if self.path.move_path(mirror_src_path,mirror_dest_path):
-								return True
+								if sys.platform == 'linux2':
+									return True
+								elif sys.platform == 'win32':
+									if self.path.del_path(mirror_src_path):
+										return True
+									else:
+										return False
+								else:
+									raise OSError('Unrecognized system')
 							else:
 								#error, can not move old path to new one
 								return False
@@ -271,7 +279,15 @@ class SyncHandler(object):
 									#can not create path tree
 									return False
 							if self.path.move_path(mirror_src_path,mirror_dest_path):
-								return True
+								if sys.platform == 'linux2':
+									return True
+								elif sys.platform == 'win32':
+									if self.path.del_path(mirror_src_path):
+										return True
+									else:
+										return False
+								else:
+									raise OSError('Unrecognized system')
 							else:
 								#error, can not move old path to new one
 								return False
