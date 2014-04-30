@@ -11,6 +11,7 @@ from lib.helpers.path_wrapper import PathWrapper
 import logging
 import time
 import os.path
+import sys
 
 class SyncHandler(object):
 	"""Handler for job queue"""
@@ -66,7 +67,12 @@ class SyncHandler(object):
 		try:
 			self.logger.debug('on_delete, item: %s'%(item))
 			#setup the mirror path
-			mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+			if sys.platform == 'linux2':
+				mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+			elif sys.platform == 'win32':
+				mirror_path = item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)
+			else:
+				raise OSError('Unrecognized system')
 
 			if self.path.check_exist(mirror_path):
 				if self.path.del_path(mirror_path):
@@ -86,7 +92,13 @@ class SyncHandler(object):
 		try:
 			self.logger.debug('on_create, item: %s'%(item))
 			#setup the mirror path
-			mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+			if sys.platform == 'linux2':
+				mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+			elif sys.platform == 'win32':
+				mirror_path = item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)
+			else:
+				raise OSError('Unrecognized system')
+
 			#check if source path exist
 			if self.path.check_exist(item.src_path):
 				#check if mirror path exist
@@ -142,7 +154,12 @@ class SyncHandler(object):
 		try:
 			self.logger.debug('on_modify, item: %s'%(item))
 			#setup the mirror path
-			mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+			if sys.platform == 'linux2':
+				mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+			elif sys.platform == 'win32':
+				mirror_path = item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)
+			else:
+				raise OSError('Unrecognized system')
 
 			if self.path.check_exist(item.src_path):
 				#source path exist
@@ -208,11 +225,23 @@ class SyncHandler(object):
 		    If the destination already exists but is not a directory, it may be
 		    overwritten depending on os.rename() semantics.
 			"""
-			#setup the mirror source path
-			mirror_src_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
 
-			#setup the mirror dest path
-			mirror_dest_path = item.dest_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+			if sys.platform == 'linux2':
+				#setup the mirror source path
+				mirror_src_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+
+				#setup the mirror dest path
+				mirror_dest_path = item.dest_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+
+			elif sys.platform == 'win32':
+				#setup the mirror source path
+				mirror_src_path = item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)
+
+				#setup the mirror dest path
+				mirror_dest_path = item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)
+
+			else:
+				raise OSError('Unrecognized system')
 
 			#check if the new destination exist
 			if self.path.check_exist(item.dest_path):
