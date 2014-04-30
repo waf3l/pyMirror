@@ -161,7 +161,7 @@ class PathWrapper(object):
 			else:
 				if self.make_dir(os.path.split(dst_path)[0]):
 					copy2(src_path,dst_path)
-					self.logger.debug('File successfull copied from %s to %s'%(src_path,dst_path))
+					self.logger.debug(u'File successfull copied from %s to %s'%(src_path,dst_path))
 				else:
 					#can not create directory tree for file to copy
 					return False

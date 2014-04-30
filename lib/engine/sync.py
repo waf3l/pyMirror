@@ -65,8 +65,11 @@ class SyncHandler(object):
 		"""Item event on delete"""
 		try:
 			self.logger.debug('on_delete, item: %s'%(item))
-			if self.path.check_exist(item.src_path.replace(self.config.watch_dir, self.config.mirror_dir)):
-				if self.path.del_path(item.src_path.replace(self.config.watch_dir, self.config.mirror_dir)):
+			#setup the mirror path
+			mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+
+			if self.path.check_exist(mirror_path):
+				if self.path.del_path(mirror_path):
 					return True
 				else:
 					#can not delete path
@@ -82,23 +85,25 @@ class SyncHandler(object):
 		"""New item event on create"""
 		try:
 			self.logger.debug('on_create, item: %s'%(item))
+			#setup the mirror path
+			mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
 			#check if source path exist
 			if self.path.check_exist(item.src_path):
 				#check if mirror path exist
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+				if self.path.check_exist(mirror_path):
 					#mirror path exists
 					if item.is_directory:
 						#path is directory skipping
 						return True
 					else:
 						#compare the two files
-						if self.path.cmp_paths(item.src_path,item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.cmp_paths(item.src_path,mirror_path):
 							#files are equel skiping
 							return True
 						else:
 							#file are diffrent delete old and copy new one
-							if self.path.del_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							if self.path.del_path(mirror_path):
+								if self.path.copy_path(item.src_path, mirror_path):
 									#success
 									return True
 								else:
@@ -111,7 +116,7 @@ class SyncHandler(object):
 					#mirror path not exists
 					if item.is_directory:
 						#directory not exist create it
-						if self.path.make_dir(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.make_dir(mirror_path):
 							#success
 							return True
 						else:
@@ -119,7 +124,7 @@ class SyncHandler(object):
 							return False
 					else:
 						#file not exist copy it
-						if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.copy_path(item.src_path, mirror_path):
 							#success
 							return True
 						else:
@@ -136,11 +141,13 @@ class SyncHandler(object):
 		"""Item event on modify"""
 		try:
 			self.logger.debug('on_modify, item: %s'%(item))
-			
+			#setup the mirror path
+			mirror_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+
 			if self.path.check_exist(item.src_path):
 				#source path exist
 				#check if mirror path exist
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):				
+				if self.path.check_exist(mirror_path):				
 					#mirror path exist
 					if item.is_directory:
 						#path is dir return
@@ -148,7 +155,7 @@ class SyncHandler(object):
 					else:
 						#path is file
 						#compare the original with mirror
-						if self.path.cmp_paths(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.cmp_paths(item.src_path, mirror_path):
 							#are equel skiping
 							return True
 						else:
@@ -156,7 +163,7 @@ class SyncHandler(object):
 							#delete the old one
 							if self.path.del_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
 								#copy the new one
-								if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+								if self.path.copy_path(item.src_path, mirror_path):
 									return True
 								else:
 									#error, can not copy the new one
@@ -168,14 +175,14 @@ class SyncHandler(object):
 					#mirror path not exists
 					if item.is_directory:
 						#path is directory
-						if self.path.make_dir(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.make_dir(mirror_path):
 							return True
 						else:
 							#error, can not create directory
 							return False
 					else:
 						#path is file
-						if self.path.copy_path(item.src_path, item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.copy_path(item.src_path, mirror_path):
 							return True
 						else:
 							#error, can not copy new file
@@ -201,35 +208,40 @@ class SyncHandler(object):
 		    If the destination already exists but is not a directory, it may be
 		    overwritten depending on os.rename() semantics.
 			"""
+			#setup the mirror source path
+			mirror_src_path = item.src_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
+
+			#setup the mirror dest path
+			mirror_dest_path = item.dest_path.decode('utf-8','replace').replace(self.config.watch_dir.decode(),self.config.mirror_dir.decode()).encode('utf-8')
 
 			#check if the new destination exist
 			if self.path.check_exist(item.dest_path):
 				#check if mirror item source exists
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+				if self.path.check_exist(mirror_src_path):
 					#check if item is directory or file
 					if item.is_directory:
 						#item is directory
 						#check id dest direcotry exist in mirror
-						if self.path.check_exist(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.check_exist(mirror_dest_path):
 							#path already exist on mirror, skiping
 							return True
 						else:
 							#path not exist
 							#moving to the new location
-							if self.path.move_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir),item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							if self.path.move_path(mirror_src_path,mirror_dest_path):
 								return True
 							else:
 								#error, can not move old path to new one
 								return False
 					else:
 						#item is a file
-						status,path_tree,file_name = self.path.split_path(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir))
+						status,path_tree,file_name = self.path.split_path(mirror_dest_path)
 						if status:
 							if not self.path.check_exist(path_tree):
 								if not self.path.make_dir(path_tree):
 									#can not create path tree
 									return False
-							if self.path.move_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir),item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							if self.path.move_path(mirror_src_path,mirror_dest_path):
 								return True
 							else:
 								#error, can not move old path to new one
@@ -241,88 +253,14 @@ class SyncHandler(object):
 					#item src not exist in mirror
 					if item.is_directory:
 						#path is directory
-						if self.path.make_dir(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+						if self.path.make_dir(mirror_dest_path):
 							return True
 						else:
 							#error, can not create new directory
 							return False
 					else:
 						#path is file
-							if self.path.copy_path(item.dest_path, item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								return True
-							else:
-								#error, can not copy the new one
-								return False
-			else:
-				#new dest not exist skipping
-				return True
-		except Exception, e:
-			self.logger.error('SyncHandler.on_move, error: %s'%(str(e)),exc_info=True)
-			return False
-
-	def on_move_old(self,item):
-		"""Item eventon move"""
-		try:
-			self.logger.debug('on_move, item: %s'%(item))
-			"""
-			Copied from shutil.move
-
-			If the destination is a directory or a symlink to a directory, the source
-		    is moved inside the directory. The destination path must not already
-		    exist.
-
-		    If the destination already exists but is not a directory, it may be
-		    overwritten depending on os.rename() semantics.
-			"""
-
-			#check if the new destination exist
-			if self.path.check_exist(item.dest_path):
-				#new dest exist
-				#check if old mirror path exist
-				if self.path.check_exist(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-					#old mirror path exist
-					if item.is_directory:
-						#path is directory
-						#check if new dest pth exist in mirror
-						if self.path.check_exist(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-							#path already exist on mirror, skiping
-							return True
-						else:
-							#path not exist
-							#moving to the new location
-							if self.path.move_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir),item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								return True
-							else:
-								#error, can not move old path to new one
-								return False
-					else:
-						#path is file
-						status,path_tree,file_name = self.path.split_path(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir))
-						if status:
-							if not self.path.check_exist(path_tree):
-								if not self.path.make_dir(path_tree):
-									#can not create path tree
-									return False
-							if self.path.move_path(item.src_path.replace(self.config.watch_dir,self.config.mirror_dir),item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-								return True
-							else:
-								#error, can not move old path to new one
-								return False
-						else:
-							#something wrong whit path
-							return False
-				else:
-					#old mirror src not exist, replace move by copy
-					if item.is_directory:
-						#path is directory
-						if self.path.make_dir(item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
-							return True
-						else:
-							#error, can not create new directory
-							return False
-					else:
-						#path is file
-							if self.path.copy_path(item.dest_path, item.dest_path.replace(self.config.watch_dir,self.config.mirror_dir)):
+							if self.path.copy_path(item.dest_path, mirror_dest_path):
 								return True
 							else:
 								#error, can not copy the new one
