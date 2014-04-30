@@ -44,18 +44,11 @@ class TestSyncHelperSetup(unittest.TestCase):
 		self.config = Config()
 		self.config.watch_dir = watch_dir
 		self.config.mirror_dir = mirror_dir
-
-		#self.watcher = Watcher(self.config)
-		#self.watcher.setup()
-		#self.watcher.start()		
+		
 		self.sync = Sync(self.config)		
 
 
 	def tearDown(self):
-		# self.watcher.end_work.set()
-		# if self.watcher.isAlive():
-		# 	self.watcher.join(timeout=5)
-
 		rmtree(self.config.watch_dir)
 		rmtree(self.config.mirror_dir)
 
@@ -75,27 +68,6 @@ class TestSyncHelperSetup(unittest.TestCase):
 		myItem.is_directory = False
 
 		return file_name, myItem
-
-		# #wait for watcher that catch the events to job queue
-		# while jobQueue.isEmpty():
-		# 	time.sleep(1)
-
-		# #process job queue
-		# while not jobQueue.isEmpty():
-		# 	#get item from job queue
-		# 	status, item = jobQueue.get()
-		# 	#mark that item as done
-		# 	jobQueue.task_done()
-		# 	#check if this item is that we looking for
-		# 	if status:
-		# 		if item.event_type == 'created':
-		# 			if item.src_path == file_name:
-		# 				jobQueue.task_all_done()
-		# 				return file_name, item
-
-		# #preventive mark all items as done
-		# jobQueue.task_all_done()
-		# raise ValueError('Can not get created item')
 
 	def create_random_file_and_sync(self):
 		"""Create a random file and sync the file"""
@@ -119,27 +91,6 @@ class TestSyncHelperSetup(unittest.TestCase):
 
 		return path, myItem
 
-		# #wait for watcher that catch the events to job queue
-		# while jobQueue.isEmpty():
-		# 	time.sleep(1)
-
-		# #process job queue
-		# while not jobQueue.isEmpty():
-		# 	#get item from job queue
-		# 	status, item = jobQueue.get()
-		# 	#mark that item as done
-		# 	jobQueue.task_done()
-		# 	#check if this item is that we looking for
-		# 	if status:
-		# 		if item.event_type == 'modified':
-		# 			if item.src_path == path:
-		# 				jobQueue.task_all_done()
-		# 				return path, item
-
-		# #preventive mark all items as done
-		# jobQueue.task_all_done()
-		# raise ValueError('Can not get modified item')
-
 	def del_file(self,path):
 		"""Delete file"""
 		#remove file
@@ -150,28 +101,7 @@ class TestSyncHelperSetup(unittest.TestCase):
 		myItem.src_path = path
 		myItem.is_directory = False
 
-		return path, myItem
-
-		#wait for watcher that catch the events to job queue
-		# while jobQueue.isEmpty():
-		# 	time.sleep(1)
-
-		# #process job queue
-		# while not jobQueue.isEmpty():
-		# 	#get item from job queue
-		# 	status, item = jobQueue.get()
-		# 	#mark that item as done
-		# 	jobQueue.task_done()
-		# 	#check if this item is that we looking for
-		# 	if status:
-		# 		if item.event_type == 'deleted':
-		# 			if item.src_path == path:
-		# 				jobQueue.task_all_done()
-		# 				return path, item
-
-		# #preventive mark all items as done
-		# jobQueue.task_all_done()
-		# raise ValueError('Can not get deleted item')		
+		return path, myItem	
 
 	def move_file(self,pathA,pathB):
 		"""Move file from pathA to pathB"""
@@ -184,53 +114,6 @@ class TestSyncHelperSetup(unittest.TestCase):
 		myItem.dest_path = os.path.join(pathB,os.path.split(pathA)[1])
 		myItem.is_directory = False
 		return myItem.dest_path, myItem
-
-		# #wait for watcher that catch the events to job queue
-		# while jobQueue.isEmpty():
-		# 	time.sleep(1)
-		# if sys.platform == 'linux2':
-		# 	#process job queue
-		# 	while not jobQueue.isEmpty():
-		# 		#get item from job queue
-		# 		status, item = jobQueue.get()
-		# 		print item
-		# 		#mark that item as done
-		# 		jobQueue.task_done()
-		# 		#check if this item is that we looking for
-		# 		if status:
-		# 			if item.event_type == 'moved':
-		# 				if item.src_path == pathA:
-		# 					jobQueue.task_all_done()
-		# 					return item.dest_path, item
-
-		# 	#preventive mark all items as done
-		# 	jobQueue.task_all_done()
-		# 	raise ValueError('Can not get moved item')
-		# elif sys.platform == 'win32':
-		# 	print 'Working on windows' 
-		# 	#process job queue
-		# 	while not jobQueue.isEmpty():
-		# 		#get item from job queue
-		# 		status, item = jobQueue.get()
-		# 		#mark that item as done
-		# 		jobQueue.task_done()
-		# 		#check if this item is that we looking for
-		# 		if status:
-		# 			if item.event_type == 'created':
-		# 				if item.src_path == pathB:
-		# 					jobQueue.task_all_done()
-		# 					myItem = MyItem()
-		# 					myItem.event_type = 'moved'
-		# 					myItem.src_path = pathA
-		# 					myItem.dest_path = pathB
-		# 					myItem.is_directory = item.is_directory
-		# 					return myItem.dest_path, myItem
-
-		# 	#preventive mark all items as done
-		# 	jobQueue.task_all_done()
-		# 	raise ValueError('Can not get moved item')
-		# else:
-		# 	raise OSError('Unrecognized system')
 
 	def create_dir(self,path):
 		"""Create directory"""

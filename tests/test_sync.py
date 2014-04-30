@@ -12,12 +12,6 @@ from shutil import rmtree, copy2
 app_dir = os.path.dirname(os.getcwd())
 sys.path.append(app_dir)
 
-#watch_dir = os.path.join(app_dir,'tests','watch_dir')
-#mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
-
-watch_dir = os.path.join(tempfile.gettempdir(),'tests','watch_dir')
-mirror_dir = os.path.join(tempfile.gettempdir(),'tests','mirror_dir')
-
 from lib.setup.config import Config
 from lib.helpers.hs_generator import get_random_string
 from lib.engine.watcher import Watcher
@@ -29,6 +23,14 @@ class TestSyncSetup(unittest.TestCase):
     Tests setup for Sync
     """
     def setUp(self):
+		temp_folder = tempfile.gettempdir()
+
+		watch_dir_name = 'watch_'+get_random_string()
+		mirror_dir_name = 'mirror_'+get_random_string()
+
+		watch_dir = os.path.join(temp_folder,watch_dir_name)
+		mirror_dir = os.path.join(temp_folder,mirror_dir_name)
+		
 		os.makedirs(watch_dir)
 		os.makedirs(mirror_dir)
 
@@ -51,8 +53,8 @@ class TestSyncSetup(unittest.TestCase):
 		if self.sync.isAlive():
 			self.sync.join()
 
-		rmtree(watch_dir)
-		rmtree(mirror_dir)
+		rmtree(self.config.watch_dir)
+		rmtree(self.config.mirror_dir)
 
 class TestSync(TestSyncSetup):
 	"""Test for Sync class"""

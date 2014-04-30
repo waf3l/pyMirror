@@ -10,11 +10,11 @@ from test_sync_handler import TestSyncHandler
 
 def suite():
     suite = unittest.TestSuite()
-    #suite.addTest(unittest.makeSuite(TestPathWrapper))
-    #suite.addTest(unittest.makeSuite(TestJobQueue))
-    #suite.addTest(unittest.makeSuite(TestConfig))
+    suite.addTest(unittest.makeSuite(TestPathWrapper))
+    suite.addTest(unittest.makeSuite(TestJobQueue))
+    suite.addTest(unittest.makeSuite(TestConfig))
     suite.addTest(unittest.makeSuite(TestLogger))
-    #suite.addTest(unittest.makeSuite(TestHSGenerator))
+    suite.addTest(unittest.makeSuite(TestHSGenerator))
     #suite.addTest(unittest.makeSuite(TestWatcher))
     #suite.addTest(unittest.makeSuite(TestSync))
     suite.addTest(unittest.makeSuite(TestSyncHandler))

@@ -11,14 +11,9 @@ from shutil import rmtree, copy2
 app_dir = os.path.dirname(os.getcwd())
 sys.path.append(app_dir)
 
-#watch_dir = os.path.join(app_dir,'tests','watch_dir')
-#mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
-
-watch_dir = os.path.join(tempfile.gettempdir(),'tests','watchDir')
-mirror_dir = os.path.join(tempfile.gettempdir(),'tests','mirrorDir')
-
 from lib.helpers.path_wrapper import PathWrapper
 from lib.helpers.hs_generator import get_random_string
+from lib.setup.config import Config
 
 
 
@@ -27,21 +22,34 @@ class TestPathWrapperSetup(unittest.TestCase):
     Tests setup for PathWrapper
     """
     def setUp(self):
+        temp_folder = tempfile.gettempdir()
+
+        watch_dir_name = 'watch_'+get_random_string()
+        mirror_dir_name = 'mirror_'+get_random_string()
+
+        watch_dir = os.path.join(temp_folder,watch_dir_name)
+        mirror_dir = os.path.join(temp_folder,mirror_dir_name)
+        
         os.makedirs(watch_dir)
         os.makedirs(mirror_dir)
+
+        self.config = Config()
+        self.config.watch_dir = watch_dir
+        self.config.mirror_dir = mirror_dir
+        
         self.path = PathWrapper(watch_dir)
 
         self.create_files_cmp()
 
     def tearDown(self):
-        rmtree(watch_dir)
-        rmtree(mirror_dir)
+        rmtree(self.config.watch_dir)
+        rmtree(self.config.mirror_dir)
 
     def create_files_cmp(self):
         """create random binary data and create copy of it"""
-        self.fileA = os.path.join(watch_dir,'cmp_file_a.bin')
-        self.fileB = os.path.join(watch_dir,'cmp_file_b.bin')
-        self.fileC = os.path.join(watch_dir,'cmp_file_c.bin')
+        self.fileA = os.path.join(self.config.watch_dir,'cmp_file_a.bin')
+        self.fileB = os.path.join(self.config.watch_dir,'cmp_file_b.bin')
+        self.fileC = os.path.join(self.config.watch_dir,'cmp_file_c.bin')
         with open(self.fileA,'wb') as myFile:
             myFile.write(os.urandom(1024))
         with open(self.fileC,'wb') as myFile:
@@ -74,27 +82,27 @@ class TestPathWrapper(TestPathWrapperSetup):
     def test_check_path_protect(self):
         """Check if path is in protected path or not"""
         #test protected path
-        self.assertTrue(self.path.check_path_protect(watch_dir))
+        self.assertTrue(self.path.check_path_protect(self.config.watch_dir))
         #test not protected path
         self.assertFalse(self.path.check_path_protect('xcxcxc'))
         #test none protected path
         path_wrapper_none_protected = PathWrapper()
-        self.assertFalse(path_wrapper_none_protected.check_path_protect(watch_dir))
+        self.assertFalse(path_wrapper_none_protected.check_path_protect(self.config.watch_dir))
 
     def test_split_path(self):
         """Check method splits the path and return vaules"""
         #try to split path
-        status, path,path_item = self.path.split_path(watch_dir)
+        status, path,path_item = self.path.split_path(self.config.watch_dir)
         #check status of split path
         self.assertTrue(status)
-        self.assertEqual(watch_dir,os.path.join(path,path_item))
+        self.assertEqual(self.config.watch_dir,os.path.join(path,path_item))
 
     def test_make_dir(self):
         """Check if create directories"""
         #creat edirectory
-        self.assertTrue(self.path.make_dir(os.path.join(mirror_dir,'test')))
+        self.assertTrue(self.path.make_dir(os.path.join(self.config.mirror_dir,'test')))
         #create error catching
-        self.assertFalse(self.path.make_dir(os.path.join(mirror_dir,'test')))
+        self.assertFalse(self.path.make_dir(os.path.join(self.config.mirror_dir,'test')))
 
     def test_iterate_path(self):
         """I dont know how to test it"""
@@ -112,27 +120,27 @@ class TestPathWrapper(TestPathWrapperSetup):
     def test_del_path(self):
         """Test delete path"""
         #test delete protected path
-        self.assertFalse(self.path.del_path(watch_dir))
+        self.assertFalse(self.path.del_path(self.config.watch_dir))
         #test delete path that not exists
         self.assertFalse(self.path.del_path('/sdsdsdsd'))
 
         #test delete directory
-        dir_path = self.create_random_dir(mirror_dir)
+        dir_path = self.create_random_dir(self.config.mirror_dir)
         self.assertTrue(self.path.del_path(dir_path))
         self.assertFalse(self.path.check_exist(dir_path))
 
         #test delete file
-        file_path = self.create_random_file(mirror_dir)
+        file_path = self.create_random_file(self.config.mirror_dir)
         self.assertTrue(self.path.del_path(file_path))
         self.assertFalse(self.path.check_exist(file_path))
 
     def test_copy_path(self):
         """Test copy files"""
         #create file
-        file_path = self.create_random_file(watch_dir)
+        file_path = self.create_random_file(self.config.watch_dir)
         
         #test copy from a to b
-        copy_to_file_path = file_path.replace(file_path,mirror_dir)  
+        copy_to_file_path = file_path.replace(file_path,self.config.mirror_dir)  
         self.assertTrue(self.path.copy_path(file_path,copy_to_file_path))
         self.assertTrue(self.path.check_exist(copy_to_file_path))
         
@@ -143,9 +151,9 @@ class TestPathWrapper(TestPathWrapperSetup):
     def test_move_path(self):
         """Test move file or directory"""
         #create file
-        file_path = self.create_random_file(watch_dir)
+        file_path = self.create_random_file(self.config.watch_dir)
         #path to move file
-        file_move_path = file_path.replace(watch_dir,mirror_dir)
+        file_move_path = file_path.replace(self.config.watch_dir,self.config.mirror_dir)
         #move file
         self.assertTrue(self.path.move_path(file_path,file_move_path))
         #check if exists moved file
@@ -154,9 +162,9 @@ class TestPathWrapper(TestPathWrapperSetup):
         self.assertFalse(self.path.check_exist(file_path))
 
         #create directory
-        dir_path = self.create_random_dir(watch_dir)
+        dir_path = self.create_random_dir(self.config.watch_dir)
         #dir path to move
-        dir_move_path = dir_path.replace(watch_dir,mirror_dir)
+        dir_move_path = dir_path.replace(self.config.watch_dir,self.config.mirror_dir)
         #move dir
         self.assertTrue(self.path.move_path(dir_path,dir_move_path))
         #check if exists moved dir
