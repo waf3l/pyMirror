@@ -26,8 +26,8 @@ class TestSyncHelperSetup(unittest.TestCase):
 	def setUp(self):
 		temp_folder = tempfile.gettempdir()
 
-		watch_dir_name = 'watch_dir'
-		mirror_dir_name = 'mirror_dir'
+		watch_dir_name = 'watch_'+get_random_string()
+		mirror_dir_name = 'mirror_'+get_random_string()
 
 		watch_dir = os.path.join(temp_folder,watch_dir_name)
 		mirror_dir = os.path.join(temp_folder,mirror_dir_name)
@@ -53,8 +53,13 @@ class TestSyncHelperSetup(unittest.TestCase):
 			self.watcher.join(timeout=5)
 
 		rmtree(self.config.watch_dir)
+		while not os.path.exists(self.config.watch_dir):
+			time.sleep(1)
+
 		rmtree(self.config.mirror_dir)
-	
+		while not os.path.exists(self.config.mirror_dir):
+			time.sleep(1)
+				
 	def create_random_file_without_sync(self, path):
 		"""Create random file"""
 		#set the path and file name
