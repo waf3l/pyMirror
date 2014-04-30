@@ -19,6 +19,12 @@ from lib.engine.watcher import Watcher
 from lib.engine.sync import Sync
 from lib.helpers.job_queue import jobQueue
 
+class MyItem(object):
+        event_typ = ''
+        src_path = ''
+        dest_path = ''
+        is_directory = False
+
 class TestSyncHelperSetup(unittest.TestCase):
 	"""
 	Tests setup for Sync Handler
@@ -56,7 +62,8 @@ class TestSyncHelperSetup(unittest.TestCase):
 	def create_random_file_without_sync(self, path):
 		"""Create random file"""
 		#set the path and file name
-		file_name = os.path.join(path,get_random_string()+'.bin')
+		file_name = get_random_string()+'.bin'
+		file_name = os.path.join(path,file_name)
 
 		#create file
 		with open(file_name,'wb') as myFile:
@@ -171,6 +178,7 @@ class TestSyncHelperSetup(unittest.TestCase):
 			jobQueue.task_all_done()
 			raise ValueError('Can not get moved item')
 		elif sys.platform == 'win32':
+                        print 'Working on windows' 
 			#process job queue
 			while not jobQueue.isEmpty():
 				#get item from job queue
@@ -182,10 +190,12 @@ class TestSyncHelperSetup(unittest.TestCase):
 					if item.event_type == 'created':
 						if item.src_path == pathB:
 							jobQueue.task_all_done()
+							myItem = MyItem()
 							myItem.event_type = 'moved'
 							myItem.src_path = pathA
 							myItem.dest_path = pathB
-							return item.dest_path, item
+							myItem.is_directory = item.is_directory
+							return myItem.dest_path, myItem
 
 			#preventive mark all items as done
 			jobQueue.task_all_done()
