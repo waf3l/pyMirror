@@ -14,8 +14,8 @@ sys.path.append(app_dir)
 #watch_dir = os.path.join(app_dir,'tests','watch_dir')
 #mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
 
-watch_dir = os.path.join(tempfile.gettempdir(),'tests','watch_dir')
-mirror_dir = os.path.join(tempfile.gettempdir(),'tests','mirror_dir')
+watch_dir = os.path.join(tempfile.gettempdir(),'tests','watchDir')
+mirror_dir = os.path.join(tempfile.gettempdir(),'tests','mirrorDir')
 
 from lib.helpers.path_wrapper import PathWrapper
 from lib.helpers.hs_generator import get_random_string
