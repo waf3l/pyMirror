@@ -13,12 +13,6 @@ from filecmp import cmp
 app_dir = os.path.dirname(os.getcwd())
 sys.path.append(app_dir)
 
-#watch_dir = os.path.join(app_dir,'tests','watch_dir')
-#mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
-
-watch_dir = os.path.join(tempfile.gettempdir(),'tests','watchDir')
-mirror_dir = os.path.join(tempfile.gettempdir(),'tests','mirrorDir')
-
 from lib.setup.config import Config
 from lib.helpers.hs_generator import get_random_string
 from lib.engine.watcher import Watcher
@@ -30,6 +24,14 @@ class TestSyncHelperSetup(unittest.TestCase):
 	Tests setup for Sync Handler
 	"""
 	def setUp(self):
+		temp_folder = tempfile.gettempdir()
+
+		watch_dir_name = 'watch_dir'
+		mirror_dir_name = 'mirror_dir'
+
+		watch_dir = os.path.join(temp_folder,watch_dir_name)
+		mirror_dir = os.path.join(temp_folder,mirror_dir_name)
+		
 		os.makedirs(watch_dir)
 		os.makedirs(mirror_dir)
 
@@ -48,8 +50,8 @@ class TestSyncHelperSetup(unittest.TestCase):
 		if self.watcher.isAlive():
 			self.watcher.join(timeout=5)
 
-		rmtree(watch_dir)
-		rmtree(mirror_dir)
+		rmtree(self.config.watch_dir)
+		rmtree(self.config.mirror_dir)
 	
 	def create_random_file_without_sync(self, path):
 		"""Create random file"""
@@ -84,7 +86,7 @@ class TestSyncHelperSetup(unittest.TestCase):
 	def create_random_file_and_sync(self):
 		"""Create a random file and sync the file"""
 		#create the file
-		file_created, item = self.create_random_file_without_sync(watch_dir)
+		file_created, item = self.create_random_file_without_sync(self.config.watch_dir)
 
 		#return file name and path with the status of sync
 		return file_created, self.sync.sync_handler.process_item(item)
@@ -185,16 +187,16 @@ class TestSyncHandler(TestSyncHelperSetup):
 	def test_on_create_file(self):
 		"""Test on_create event"""
 		#creat the file and return watcher item and file name and path
-		file_name, item = self.create_random_file_without_sync(watch_dir)
+		file_name, item = self.create_random_file_without_sync(self.config.watch_dir)
 		
 		#process the item
 		self.assertTrue(self.sync.sync_handler.process_item(item))
 		
 		#check if exist in mirror dir
-		self.assertTrue(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		self.assertTrue(os.path.exists(file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 		
 		#compare synced file with original
-		self.assertTrue(cmp(file_name,file_name.replace(watch_dir,mirror_dir)))
+		self.assertTrue(cmp(file_name,file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 	def test_on_modified_with_sync_files(self):
 		"""Test on_modified event with already synced files"""
@@ -211,15 +213,15 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertTrue(self.sync.sync_handler.process_item(item))
 
 		#check if exist in mirror dir
-		self.assertTrue(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		self.assertTrue(os.path.exists(file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 		
 		#compare synced file with original
-		self.assertTrue(cmp(file_name,file_name.replace(watch_dir,mirror_dir)))
+		self.assertTrue(cmp(file_name,file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 	def test_on_modified_without_sync_files(self):
 		"""Test on_modified event without synced files"""
 		#create file
-		file_name, item = self.create_random_file_without_sync(watch_dir)
+		file_name, item = self.create_random_file_without_sync(self.config.watch_dir)
 	
 		#check file path exist
 		self.assertTrue(os.path.exists(file_name))
@@ -234,10 +236,10 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertTrue(self.sync.sync_handler.process_item(item))
 
 		#check if exist in mirror dir
-		self.assertTrue(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		self.assertTrue(os.path.exists(file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 		
 		#compare synced file with original
-		self.assertTrue(cmp(file_name,file_name.replace(watch_dir,mirror_dir)))
+		self.assertTrue(cmp(file_name,file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 	def test_on_delete_with_sync_files(self):
 		"""Test on_delete event with already synced files"""
@@ -257,12 +259,12 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertFalse(os.path.exists(file_name))
 
 		#check if exist in mirror dir
-		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		self.assertFalse(os.path.exists(file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 	def test_on_delete_without_sync_files(self):
 		"""Test on_delete event without synced files"""
 		#create file
-		file_name, item = self.create_random_file_without_sync(watch_dir)
+		file_name, item = self.create_random_file_without_sync(self.config.watch_dir)
 	
 		#check file path exist
 		self.assertTrue(os.path.exists(file_name))
@@ -280,7 +282,7 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertFalse(os.path.exists(file_name))
 
 		#check if exist in mirror dir
-		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		self.assertFalse(os.path.exists(file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 	def test_on_move_with_sync_files(self):
 		"""Test on_moved event with already synced files"""
@@ -291,7 +293,7 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertTrue(status)
 
 		#create directory
-		dir_path = self.create_dir(watch_dir)
+		dir_path = self.create_dir(self.config.watch_dir)
 
 		#move the file
 		dir_dest_path, item = self.move_file(file_name,dir_path)
@@ -303,7 +305,7 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertTrue(self.sync.sync_handler.process_item(item))
 
 		#check if exist mirror dir dest path
-		self.assertTrue(os.path.exists(dir_dest_path.replace(watch_dir,mirror_dir)))
+		self.assertTrue(os.path.exists(dir_dest_path.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 		#check if exist watch dir dest path
 		self.assertTrue(os.path.exists(dir_dest_path))
@@ -312,12 +314,12 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertFalse(os.path.exists(file_name))
 
 		#check if not exist source in mirror dir
-		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		self.assertFalse(os.path.exists(file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 	def test_on_move_without_sync_files(self):
 		"""Test on_moved event without synced files"""
 		#create file
-		file_name, item = self.create_random_file_without_sync(watch_dir)
+		file_name, item = self.create_random_file_without_sync(self.config.watch_dir)
 
 		#check file path exist
 		self.assertTrue(os.path.exists(file_name))
@@ -326,7 +328,7 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertIsNotNone(item)
 
 		#create directory
-		dir_path = self.create_dir(watch_dir)
+		dir_path = self.create_dir(self.config.watch_dir)
 
 		#move the file
 		dir_dest_path, item = self.move_file(file_name,dir_path)
@@ -338,7 +340,7 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertTrue(self.sync.sync_handler.process_item(item))
 
 		#check if exist mirror dir dest path
-		self.assertTrue(os.path.exists(dir_dest_path.replace(watch_dir,mirror_dir)))
+		self.assertTrue(os.path.exists(dir_dest_path.replace(self.config.watch_dir,self.config.mirror_dir)))
 
 		#check if exist watch dir dest path
 		self.assertTrue(os.path.exists(dir_dest_path))
@@ -347,4 +349,4 @@ class TestSyncHandler(TestSyncHelperSetup):
 		self.assertFalse(os.path.exists(file_name))
 
 		#check if not exist source in mirror dir
-		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		self.assertFalse(os.path.exists(file_name.replace(self.config.watch_dir,self.config.mirror_dir)))
