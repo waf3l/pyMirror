@@ -15,7 +15,7 @@ def suite():
     suite.addTest(unittest.makeSuite(TestConfig))
     suite.addTest(unittest.makeSuite(TestLogger))
     suite.addTest(unittest.makeSuite(TestHSGenerator))
-    suite.addTest(unittest.makeSuite(TestWatcher))
+    #suite.addTest(unittest.makeSuite(TestWatcher))
     #suite.addTest(unittest.makeSuite(TestSync))
     suite.addTest(unittest.makeSuite(TestSyncHandler))
     return suite

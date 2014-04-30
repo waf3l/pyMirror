@@ -54,6 +54,20 @@ class PathWrapper(object):
 			self.logger.error('PathWrapper.check_exist: %s'%(str(e)),exc_info=True)
 			return False
 
+	def split_path(self,path):
+		"""
+		Split path to two peaces, first is path to the file or directory that is in the second peace, 
+		second that is file or directory that is in the end of given path
+
+		path: path to split
+		"""
+		try:
+			path,path_item = os.path.split(path)
+			return True, path,path_item
+		except Exception, e:
+			self.logger.error('PathWrapper.move_path: %s'%(str(e)),exc_info=True)
+			return False, None, None
+
 	def make_dir(self,path):
 		"""
 		Create directories

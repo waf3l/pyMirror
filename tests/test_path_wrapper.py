@@ -5,13 +5,17 @@ Tests for path_wrapper module
 import os
 import unittest
 import sys
+import tempfile
 from shutil import rmtree, copy2
 
 app_dir = os.path.dirname(os.getcwd())
 sys.path.append(app_dir)
 
-watch_dir = os.path.join(app_dir,'tests','watch_dir')
-mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
+#watch_dir = os.path.join(app_dir,'tests','watch_dir')
+#mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
+
+watch_dir = os.path.join(tempfile.gettempdir(),'tests','watch_dir')
+mirror_dir = os.path.join(tempfile.gettempdir(),'tests','mirror_dir')
 
 from lib.helpers.path_wrapper import PathWrapper
 from lib.helpers.hs_generator import get_random_string
@@ -76,6 +80,14 @@ class TestPathWrapper(TestPathWrapperSetup):
         #test none protected path
         path_wrapper_none_protected = PathWrapper()
         self.assertFalse(path_wrapper_none_protected.check_path_protect(watch_dir))
+
+    def test_split_path(self):
+        """Check method splits the path and return vaules"""
+        #try to split path
+        status, path,path_item = self.path.split_path(watch_dir)
+        #check status of split path
+        self.assertTrue(status)
+        self.assertEqual(watch_dir,os.path.join(path,path_item))
 
     def test_make_dir(self):
         """Check if create directories"""

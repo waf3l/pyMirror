@@ -6,13 +6,18 @@ import os
 import unittest
 import sys
 import time
-from shutil import rmtree, copy2
+import tempfile
+from shutil import rmtree, copy2, move
+from filecmp import cmp 
 
 app_dir = os.path.dirname(os.getcwd())
 sys.path.append(app_dir)
 
-watch_dir = os.path.join(app_dir,'tests','watch_dir')
-mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
+#watch_dir = os.path.join(app_dir,'tests','watch_dir')
+#mirror_dir = os.path.join(app_dir,'tests','mirror_dir')
+
+watch_dir = os.path.join(tempfile.gettempdir(),'tests','watch_dir')
+mirror_dir = os.path.join(tempfile.gettempdir(),'tests','mirror_dir')
 
 from lib.setup.config import Config
 from lib.helpers.hs_generator import get_random_string
@@ -49,7 +54,7 @@ class TestSyncHelperSetup(unittest.TestCase):
 	def create_random_file_without_sync(self, path):
 		"""Create random file"""
 		#set the path and file name
-		file_name = os.path.join(path,get_random_string())
+		file_name = os.path.join(path,get_random_string()+'.bin')
 
 		#create file
 		with open(file_name,'wb') as myFile:
@@ -86,57 +91,260 @@ class TestSyncHelperSetup(unittest.TestCase):
 
 	def mod_file(self,path):
 		"""Modified file"""
-		#TODO: rewrite like create_random_file
+		#open file to be modified
 		with open(path,'wb') as myFile:
+			#modified the file
 			myFile.write(os.urandom(2048))
-		
+
+		#wait for watcher that catch the events to job queue
 		while jobQueue.isEmpty():
 			time.sleep(1)
 
+		#process job queue
 		while not jobQueue.isEmpty():
+			#get item from job queue
 			status, item = jobQueue.get()
-			if item.event_type == 'modified':
-				if status:
-					jobQueue.task_all_done()
-					#TODO: return item not process item
-					return self.sync.sync_handler.process_item(item)
-				else:
-					jobQueue.task_all_done()
-					return False
+			#mark that item as done
+			jobQueue.task_done()
+			#check if this item is that we looking for
+			if status:
+				if item.event_type == 'modified':
+					if item.src_path == path:
+						jobQueue.task_all_done()
+						return path, item
+
+		#preventive mark all items as done
 		jobQueue.task_all_done()
 		raise ValueError('Can not get modified item')
+
+	def del_file(self,path):
+		"""Delete file"""
+		#remove file
+		os.remove(path)
+
+		#wait for watcher that catch the events to job queue
+		while jobQueue.isEmpty():
+			time.sleep(1)
+
+		#process job queue
+		while not jobQueue.isEmpty():
+			#get item from job queue
+			status, item = jobQueue.get()
+			#mark that item as done
+			jobQueue.task_done()
+			#check if this item is that we looking for
+			if status:
+				if item.event_type == 'deleted':
+					if item.src_path == path:
+						jobQueue.task_all_done()
+						return path, item
+
+		#preventive mark all items as done
+		jobQueue.task_all_done()
+		raise ValueError('Can not get deleted item')		
+
+	def move_file(self,pathA,pathB):
+		"""Move file from pathA to pathB"""
+		#moved the file
+		move(pathA,pathB)
+
+		#wait for watcher that catch the events to job queue
+		while jobQueue.isEmpty():
+			time.sleep(1)
+
+		#process job queue
+		while not jobQueue.isEmpty():
+			#get item from job queue
+			status, item = jobQueue.get()
+			#mark that item as done
+			jobQueue.task_done()
+			#check if this item is that we looking for
+			if status:
+				if item.event_type == 'moved':
+					if item.src_path == pathA:
+						jobQueue.task_all_done()
+						return item.dest_path, item
+
+		#preventive mark all items as done
+		jobQueue.task_all_done()
+		raise ValueError('Can not get moved item')
+
+	def create_dir(self,path):
+		"""Create directory"""
+		#create path of new directory
+		dir_path = os.path.join(path,get_random_string())
+		#create directory
+		os.makedirs(dir_path)
+		#return created directory path
+		return dir_path
 
 class TestSyncHandler(TestSyncHelperSetup):
 	"""
 	Tests for Sync Handler class
 	"""
-	def test_on_create(self):
+	def test_on_create_file(self):
 		"""Test on_create event"""
 		#creat the file and return watcher item and file name and path
 		file_name, item = self.create_random_file_without_sync(watch_dir)
+		
 		#process the item
 		self.assertTrue(self.sync.sync_handler.process_item(item))
-		self.assertTrue(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
-		#TODO: add compar files watch_die with mirror_dir
-
-
-	def atest_on_modified_without_compare(self):
-		file_created = self.create_random_file(watch_dir)
-		file_modified = self.mod_file(file_created)
-
-		time.sleep(2)
-		while not jobQueue.isEmpty():
-			status, item = jobQueue.get()
-			self.assertTrue(status)
-			if item.event_type == 'modified':
-				self.assertTrue(self.sync.sync_handler.process_item(item))
-			jobQueue.task_done()
-
-	def test_on_modified_with_compare(self):
-		path_file, status = self.create_random_file_and_sync()
 		
+		#check if exist in mirror dir
+		self.assertTrue(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		
+		#compare synced file with original
+		self.assertTrue(cmp(file_name,file_name.replace(watch_dir,mirror_dir)))
+
+	def test_on_modified_with_sync_files(self):
+		"""Test on_modified event with already synced files"""
+		#create file
+		file_name, status = self.create_random_file_and_sync()
+	
+		#check status of created file
 		self.assertTrue(status)
-		#self.assertTrue(self.mod_file(path_file))
-		#TODO: process item
-		#TODO: add check exists
-		#TODO: compare org with mirror
+
+		#modified the file
+		mod_file, item = self.mod_file(file_name)
+		
+		#process the item
+		self.assertTrue(self.sync.sync_handler.process_item(item))
+
+		#check if exist in mirror dir
+		self.assertTrue(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		
+		#compare synced file with original
+		self.assertTrue(cmp(file_name,file_name.replace(watch_dir,mirror_dir)))
+
+	def test_on_modified_without_sync_files(self):
+		"""Test on_modified event without synced files"""
+		#create file
+		file_name, item = self.create_random_file_without_sync(watch_dir)
+	
+		#check file path exist
+		self.assertTrue(os.path.exists(file_name))
+
+		#check if returned item is not none
+		self.assertIsNotNone(item)
+
+		#modified the file
+		mod_file, item = self.mod_file(file_name)
+
+		#process the item
+		self.assertTrue(self.sync.sync_handler.process_item(item))
+
+		#check if exist in mirror dir
+		self.assertTrue(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+		
+		#compare synced file with original
+		self.assertTrue(cmp(file_name,file_name.replace(watch_dir,mirror_dir)))
+
+	def test_on_delete_with_sync_files(self):
+		"""Test on_delete event with already synced files"""
+		#create file
+		file_name, status = self.create_random_file_and_sync()
+	
+		#check status of created file
+		self.assertTrue(status)
+
+		#modified the file
+		deleted_file, item = self.del_file(file_name)
+		
+		#process the item
+		self.assertTrue(self.sync.sync_handler.process_item(item))
+
+		#check if exist in watch dir
+		self.assertFalse(os.path.exists(file_name))
+
+		#check if exist in mirror dir
+		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+
+	def test_on_delete_without_sync_files(self):
+		"""Test on_delete event without synced files"""
+		#create file
+		file_name, item = self.create_random_file_without_sync(watch_dir)
+	
+		#check file path exist
+		self.assertTrue(os.path.exists(file_name))
+
+		#check if returned item is not none
+		self.assertIsNotNone(item)
+
+		#modified the file
+		deleted_file, item = self.del_file(file_name)
+		
+		#process the item
+		self.assertTrue(self.sync.sync_handler.process_item(item))
+
+		#check if exist in watch dir
+		self.assertFalse(os.path.exists(file_name))
+
+		#check if exist in mirror dir
+		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+
+	def test_on_move_with_sync_files(self):
+		"""Test on_moved event with already synced files"""
+		#create file
+		file_name, status = self.create_random_file_and_sync()
+	
+		#check status of created file
+		self.assertTrue(status)
+
+		#create directory
+		dir_path = self.create_dir(watch_dir)
+
+		#move the file
+		dir_dest_path, item = self.move_file(file_name,dir_path)
+
+		#check if exists dest_path
+		self.assertTrue(os.path.exists(dir_dest_path))
+		
+		#process the item
+		self.assertTrue(self.sync.sync_handler.process_item(item))
+
+		#check if exist mirror dir dest path
+		self.assertTrue(os.path.exists(dir_dest_path.replace(watch_dir,mirror_dir)))
+
+		#check if exist watch dir dest path
+		self.assertTrue(os.path.exists(dir_dest_path))
+
+		#check if not exist source in watched dir
+		self.assertFalse(os.path.exists(file_name))
+
+		#check if not exist source in mirror dir
+		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
+
+	def test_on_move_without_sync_files(self):
+		"""Test on_moved event without synced files"""
+		#create file
+		file_name, item = self.create_random_file_without_sync(watch_dir)
+
+		#check file path exist
+		self.assertTrue(os.path.exists(file_name))
+
+		#check if returned item is not none
+		self.assertIsNotNone(item)
+
+		#create directory
+		dir_path = self.create_dir(watch_dir)
+
+		#move the file
+		dir_dest_path, item = self.move_file(file_name,dir_path)
+
+		#check if exists dest_path
+		self.assertTrue(os.path.exists(dir_dest_path))
+
+		#process the item
+		self.assertTrue(self.sync.sync_handler.process_item(item))
+
+		#check if exist mirror dir dest path
+		self.assertTrue(os.path.exists(dir_dest_path.replace(watch_dir,mirror_dir)))
+
+		#check if exist watch dir dest path
+		self.assertTrue(os.path.exists(dir_dest_path))
+
+		#check if not exist source in watched dir
+		self.assertFalse(os.path.exists(file_name))
+
+		#check if not exist source in mirror dir
+		self.assertFalse(os.path.exists(file_name.replace(watch_dir,mirror_dir)))
