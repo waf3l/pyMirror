@@ -32,10 +32,8 @@ class TestSyncHelperSetup(unittest.TestCase):
 		watch_dir = os.path.join(temp_folder,watch_dir_name)
 		mirror_dir = os.path.join(temp_folder,mirror_dir_name)
 		
-		if not os.path.exists(watch_dir):
-			os.makedirs(watch_dir)
-		if not os.path.exists(mirror_dir):
-			os.makedirs(mirror_dir)
+		os.makedirs(watch_dir)
+		os.makedirs(mirror_dir)
 
 		self.config = Config()
 		self.config.watch_dir = watch_dir
@@ -155,23 +153,42 @@ class TestSyncHelperSetup(unittest.TestCase):
 		#wait for watcher that catch the events to job queue
 		while jobQueue.isEmpty():
 			time.sleep(1)
+		if sys.platform == 'linux2':
+			#process job queue
+			while not jobQueue.isEmpty():
+				#get item from job queue
+				status, item = jobQueue.get()
+				#mark that item as done
+				jobQueue.task_done()
+				#check if this item is that we looking for
+				if status:
+					if item.event_type == 'moved':
+						if item.src_path == pathA:
+							jobQueue.task_all_done()
+							return item.dest_path, item
 
-		#process job queue
-		while not jobQueue.isEmpty():
-			#get item from job queue
-			status, item = jobQueue.get()
-			#mark that item as done
-			jobQueue.task_done()
-			#check if this item is that we looking for
-			if status:
-				if item.event_type == 'moved':
-					if item.src_path == pathA:
-						jobQueue.task_all_done()
-						return item.dest_path, item
+			#preventive mark all items as done
+			jobQueue.task_all_done()
+			raise ValueError('Can not get moved item')
+		elif sys.platform == 'win32':
+			#process job queue
+			while not jobQueue.isEmpty():
+				#get item from job queue
+				status, item = jobQueue.get()
+				#mark that item as done
+				jobQueue.task_done()
+				#check if this item is that we looking for
+				if status:
+					if item.event_type == 'created':
+						if item.src_path == pathB:
+							jobQueue.task_all_done()
+							return item.dest_path, item
 
-		#preventive mark all items as done
-		jobQueue.task_all_done()
-		raise ValueError('Can not get moved item')
+			#preventive mark all items as done
+			jobQueue.task_all_done()
+			raise ValueError('Can not get moved item')
+		else:
+			raise OSError('Unrecognized system')
 
 	def create_dir(self,path):
 		"""Create directory"""
