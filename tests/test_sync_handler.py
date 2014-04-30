@@ -32,8 +32,10 @@ class TestSyncHelperSetup(unittest.TestCase):
 		watch_dir = os.path.join(temp_folder,watch_dir_name)
 		mirror_dir = os.path.join(temp_folder,mirror_dir_name)
 		
-		os.makedirs(watch_dir)
-		os.makedirs(mirror_dir)
+		if not os.path.exists(watch_dir):
+			os.makedirs(watch_dir)
+		if not os.path.exists(mirror_dir):
+			os.makedirs(mirror_dir)
 
 		self.config = Config()
 		self.config.watch_dir = watch_dir
