@@ -182,6 +182,9 @@ class TestSyncHelperSetup(unittest.TestCase):
 					if item.event_type == 'created':
 						if item.src_path == pathB:
 							jobQueue.task_all_done()
+							myItem.event_type = 'moved'
+							myItem.src_path = pathA
+							myItem.dest_path = pathB
 							return item.dest_path, item
 
 			#preventive mark all items as done
